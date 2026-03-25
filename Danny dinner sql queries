@@ -1,0 +1,96 @@
+-- Danny's Diner SQL Queries (Original Version)
+
+select * from members; 
+select * from menu ; 
+select * from sales; 
+
+select customer_id, SUM(price) from sales 
+join menu on sales.product_id=menu.product_id
+group by customer_id
+order by SUM(price) desc ;
+
+-- how many days each customer visited the resturent 
+select customer_id , count(distinct(order_date)),count(order_date) from sales
+group by customer_id;
+
+-- what was the first item order by customer from menu by each customer (---only one time) 
+select distinct(customer_id) , min(order_date),product_name  from sales
+join menu on sales.product_id=menu.product_id 
+where order_date = ( select Min(order_date)from sales 
+where customer_id=sales.customer_id ) 
+group by customer_id, product_name ;
+
+SELECT s.customer_id, m.product_name
+FROM sales s
+JOIN menu m 
+ON s.product_id = m.product_id
+WHERE (s.customer_id, s.order_date) IN (
+SELECT customer_id, MIN(order_date)
+FROM sales
+GROUP BY customer_id
+);
+
+SELECT s.customer_id, s.product_id, m.product_name
+FROM (
+SELECT 
+    s.customer_id,
+    s.product_id,
+    ROW_NUMBER() OVER (
+        PARTITION BY s.customer_id 
+        ORDER BY s.order_date
+    ) AS rn
+FROM sales s
+) s
+join menu m on s.product_id=m.product_id
+WHERE rn = 1;
+
+-- what is the most purchased item on the menu and how many times was it purchased by all customer 
+select product_name, count(MENU.product_ID) from sales 
+join menu on sales.product_ID=menu.product_ID
+group by product_name 
+order by count(product_ID) desc 
+LIMIt 1 ; 
+
+-- which item was the most popular for each customer 
+select customer_id, product_name ,count(MENU.product_ID) from sales 
+join menu on sales.product_ID=menu.product_ID
+group by product_name, customer_ID 
+order by count(menu.product_ID) desc ;
+
+-- which item was purchsed first by the customer after they became a member 
+select sales.customer_ID, menu.product_name, MIN(sales.order_date) as first_member_purchase from sales 
+join menu on sales.product_ID=menu.product_ID
+join members on sales.customer_ID=members.customer_ID
+where sales.order_date>=members.join_date
+group by sales.customer_ID, product_name 
+order by sales.customer_ID,first_member_purchase desc ;
+
+-- which item was purchased just before the customer became a member 
+select sales.customer_ID, menu.product_name, MIN(sales.order_date) as first_member_purchase from sales 
+join menu on sales.product_ID=menu.product_ID
+join members on sales.customer_ID=members.customer_ID
+where sales.order_date<=members.join_date
+group by sales.customer_ID, product_name 
+order by sales.customer_ID,first_member_purchase desc ;
+
+-- what is the total items and amount spend for each member before they beacme a member 
+select sales.customer_ID, menu.product_name, MIN(sales.order_date) as first_member_purchase from sales 
+join menu on sales.product_ID=menu.product_ID
+join members on sales.customer_ID=members.customer_ID
+where sales.order_date>=members.join_date
+group by sales.customer_ID, product_name 
+order by sales.customer_ID,first_member_purchase desc ;
+
+-- If each $1 spent = 10 points and sushi has 2x points, how many points does each customer have?
+SELECT 
+s.customer_id,
+SUM(
+    CASE 
+        WHEN m.product_name = 'sushi' THEN m.price * 20
+        ELSE m.price * 10
+    END
+) AS points
+FROM sales s
+JOIN menu m 
+ON s.product_id = m.product_id
+GROUP BY s.customer_id;
