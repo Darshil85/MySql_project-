@@ -94,3 +94,50 @@ FROM sales s
 JOIN menu m 
 ON s.product_id = m.product_id
 GROUP BY s.customer_id;
+--Total revenue generated per month
+-- monthly revenue
+SELECT 
+    DATE_FORMAT(order_date, '%Y-%m') AS month,
+    SUM(m.price) AS revenue
+FROM sales s
+JOIN menu m 
+    ON s.product_id = m.product_id
+GROUP BY month
+ORDER BY month;
+--Find customers who visited more than 3 times
+-- frequent customers
+SELECT 
+    customer_id,
+    COUNT(*) AS total_orders
+FROM sales
+GROUP BY customer_id
+HAVING COUNT(*) > 3;
+--Find the most recent purchase of each customer
+-- latest purchase
+SELECT customer_id, product_name, order_date
+FROM (
+    SELECT 
+        s.customer_id,
+        m.product_name,
+        s.order_date,
+        ROW_NUMBER() OVER (
+            PARTITION BY s.customer_id
+            ORDER BY s.order_date DESC
+        ) AS rn
+    FROM sales s
+JOIN menu m 
+    ON s.product_id = m.product_id
+) t
+WHERE rn = 1;
+--Calculate running total spending for each customer
+-- cumulative spending
+SELECT 
+    s.customer_id,
+    s.order_date,
+    SUM(m.price) OVER (
+        PARTITION BY s.customer_id 
+        ORDER BY s.order_date
+    ) AS running_total
+FROM sales s
+JOIN menu m 
+    ON s.product_id = m.product_id;
