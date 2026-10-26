@@ -1,0 +1,4 @@
+customer_id,total_spent,items_purchased,visit_days,first_order,last_order
+A,76,6,4,2021-01-01,2021-01-11
+B,74,6,6,2021-01-01,2021-02-01
+C,36,3,2,2021-01-01,2021-01-07

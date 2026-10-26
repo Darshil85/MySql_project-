@@ -1,0 +1,4 @@
+membership_status,items,revenue,unique_customers
+Before membership,5,65,2
+Non-member / no join date,3,36,1
+On/after membership,7,85,2
